@@ -4,6 +4,7 @@ const body = document.querySelector(".body");
 const restartBtn = document.querySelector(".restart-btn");
 const popup = document.querySelector(".popup");
 const close = document.querySelector(".close");
+const popupHead = document.querySelector(".popup-head");
 
 const WORDS_VALIDATOR_URL = "https://words.dev-apis.com/validate-word";
 const WORDS_URL = "https://words.dev-apis.com/word-of-the-day?random=1";
@@ -11,18 +12,6 @@ const WORDS_URL = "https://words.dev-apis.com/word-of-the-day?random=1";
 const WORD_SIZE = 5;
 
 const generateKey = (args) => args.map((ell) => ell.toString()).join("|");
-
-function memoize(callback) {
-  const cache = new Map();
-  return (...args) => {
-    const key = generateKey(args);
-    const value = cache.get(key);
-    if (cache.has(key)) return value;
-    const result = callback(...args);
-    cache.set(key, result);
-    return result;
-  };
-}
 
 async function isValidWord(currWord) {
   const promis = await fetch(WORDS_VALIDATOR_URL, {
@@ -47,13 +36,29 @@ class WordsMaster {
     this.currIdx = 0;
   }
 
-  isValid = memoize(isValidWord);
+  memoize(callback) {
+    const cache = new Map();
+    return (...args) => {
+      const key = generateKey(args);
+      const value = cache.get(key);
+      if (cache.has(key)) return value;
+      const result = callback(...args);
+      cache.set(key, result);
+      return result;
+    };
+  }
 
-  numOfLet = memoize(this.numLetInWord);
+  isValid = this.memoize(isValidWord);
+
+  numOfLet = this.memoize(this.numLetInWord);
 
   async addLetter(event) {
     const letter = event.key;
-    if (this.isLetter(letter) && this.currWord.length < WORD_SIZE) {
+    if (
+      this.isLetter(letter) &&
+      this.currWord.length < WORD_SIZE &&
+      popup.style.display !== "flex"
+    ) {
       this.currWord += letter;
       letters[this.index++].innerText = letter;
     }
@@ -74,12 +79,18 @@ class WordsMaster {
 
   painting(validWord) {
     const currSize = this.currIdx + WORD_SIZE;
-
+    console.log(popupHead.innerText);
     if (!validWord) this.paintingBorder(currSize);
     else {
       this.paintingLetter(currSize);
       if (this.currWord === this.secretWord) {
         popup.style.display = "flex";
+        popupHead.innerText = "you're a winner!!!";
+        popupHead.style.color = "green";
+      } else if (this.index === letters.length) {
+        popupHead.innerText = "you're a loser!!!";
+        popup.style.display = "flex";
+        popupHead.style.color = "red";
       }
       this.currWord = "";
       this.currIdx = this.index;
@@ -145,6 +156,7 @@ class WordsMaster {
   }
 
   async restart() {
+    console.log("restart");
     this.currWord = "";
     this.secretWord = await getSekretWord();
     this.index = 0;
@@ -169,8 +181,5 @@ const game = new WordsMaster();
   return;
 })();
 
-close.addEventListener("click", () => {
-  popup.style.display = "none";
-});
 restartBtn.addEventListener("click", () => game.restart());
 body.addEventListener("keydown", (event) => game.addLetter(event));
