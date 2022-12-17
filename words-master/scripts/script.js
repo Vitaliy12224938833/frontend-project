@@ -2,6 +2,8 @@
 const letters = document.querySelectorAll(".scoreboard-letter");
 const body = document.querySelector(".body");
 const restartBtn = document.querySelector(".restart-btn");
+const popup = document.querySelector(".popup");
+const close = document.querySelector(".close");
 
 const WORDS_VALIDATOR_URL = "https://words.dev-apis.com/validate-word";
 const WORDS_URL = "https://words.dev-apis.com/word-of-the-day?random=1";
@@ -74,14 +76,16 @@ class WordsMaster {
     const currSize = this.currIdx + WORD_SIZE;
 
     if (!validWord) this.paintingBorder(currSize);
-    else if (this.currWord.length === WORD_SIZE) {
+    else {
       this.paintingLetter(currSize);
+      if (this.currWord === this.secretWord) {
+        popup.style.display = "flex";
+      }
       this.currWord = "";
       this.currIdx = this.index;
     }
-    if (this.currWord === this.secretWord) console.log("You winner!!");
-    return;
   }
+
   paintingLetter(currSize) {
     let idx = 0;
     const arrCurrWord = this.currWord.split("");
@@ -149,6 +153,7 @@ class WordsMaster {
       letter.innerText = "";
       letter.style.backgroundColor = "";
     }
+    popup.style.display = "none";
     console.log(this.secretWord);
     return;
   }
@@ -164,5 +169,8 @@ const game = new WordsMaster();
   return;
 })();
 
+close.addEventListener("click", () => {
+  popup.style.display = "none";
+});
 restartBtn.addEventListener("click", () => game.restart());
 body.addEventListener("keydown", (event) => game.addLetter(event));
