@@ -3,7 +3,6 @@ const letters = document.querySelectorAll(".scoreboard-letter");
 const body = document.querySelector(".body");
 const restartBtn = document.querySelector(".restart-btn");
 const popup = document.querySelector(".popup");
-const close = document.querySelector(".close");
 const popupHead = document.querySelector(".popup-head");
 
 const WORDS_VALIDATOR_URL = "https://words.dev-apis.com/validate-word";
@@ -79,19 +78,10 @@ class WordsMaster {
 
   painting(validWord) {
     const currSize = this.currIdx + WORD_SIZE;
-    console.log(popupHead.innerText);
     if (!validWord) this.paintingBorder(currSize);
     else {
       this.paintingLetter(currSize);
-      if (this.currWord === this.secretWord) {
-        popup.style.display = "flex";
-        popupHead.innerText = "you're a winner!!!";
-        popupHead.style.color = "green";
-      } else if (this.index === letters.length) {
-        popupHead.innerText = "you're a loser!!!";
-        popup.style.display = "flex";
-        popupHead.style.color = "red";
-      }
+      this.isWinner();
       this.currWord = "";
       this.currIdx = this.index;
     }
@@ -106,7 +96,7 @@ class WordsMaster {
       const currWordLetter = this.currWord[idx];
       const secretWordLetter = this.secretWord[idx++];
       const chopIndex = arrCurrWord.indexOf(currWordLetter);
-      const numOfLetCurrWord = this.numOfLet(this.currWord, currWordLetter);
+      const numOfLetCurrWord = this.numOfLet(arrCurrWord, currWordLetter);
       const numOfLetSecretWord = this.numOfLet(this.secretWord, currWordLetter);
       letterStyle.transition = "";
 
@@ -117,6 +107,7 @@ class WordsMaster {
       } else if (numOfLetSecretWord) {
         letterStyle.backgroundColor = "#ffff00";
       }
+
       if (numOfLetCurrWord > numOfLetSecretWord) {
         arrCurrWord.splice(chopIndex, 1);
       }
@@ -136,7 +127,20 @@ class WordsMaster {
     }, 300);
     return;
   }
-
+  isWinner() {
+    if (this.currWord === this.secretWord) {
+      popup.style.display = "flex";
+      popupHead.style.color = "green";
+      popupHead.innerText = "you're a winner!!!";
+      return;
+    }
+    if (this.index === letters.length) {
+      popup.style.display = "flex";
+      popupHead.style.color = "red";
+      popupHead.innerText = "you're a loser!!!";
+      return;
+    }
+  }
   isLetter(letter) {
     if (
       (letter >= "a" && letter <= "z") ||
@@ -156,7 +160,6 @@ class WordsMaster {
   }
 
   async restart() {
-    console.log("restart");
     this.currWord = "";
     this.secretWord = await getSekretWord();
     this.index = 0;
@@ -166,7 +169,6 @@ class WordsMaster {
       letter.style.backgroundColor = "";
     }
     popup.style.display = "none";
-    console.log(this.secretWord);
     return;
   }
 }
@@ -176,8 +178,8 @@ const game = new WordsMaster();
 (async () => {
   if (!game.secretWord.length) {
     game.secretWord = await getSekretWord();
-    console.log(game.secretWord);
   }
+  console.log(game.secretWord);
   return;
 })();
 
